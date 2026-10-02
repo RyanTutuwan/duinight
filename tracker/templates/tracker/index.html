@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<style>
+    .tracker {
+    max-width: 900px;
+    margin: 40px 0 0 5px;   
+    }
+
+    .participant {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        padding: 15px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .participant-name {
+        width: 150px;
+        font-weight: bold;
+    }
+
+    .stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 130px;
+    }
+
+    button {
+        padding: 3px 8px;
+        cursor: pointer;
+    }
+
+    .blur-censor {
+        filter: blur(4px);
+        cursor: pointer;
+        transition: filter 0.3s ease;
+    }
+
+
+</style>
+
+<header class="masthead">
+    <div class="container">
+        <h2>NIGHT TRACKER</h2>
+        <p>
+            one stop to keep track of who's playing,
+            who's winning, and traffic violations
+        </p>
+    </div>
+</header>
+
+<div class="tracker">
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add</button>
+    </form>
+
+    <h2>Participants</h2>
+
+    {% for participant in participants %}
+
+        <div class="participant">
+
+            <div class="participant-name">
+                {{ participant.name }}
+            </div>
+
+            <div class="stat">
+                <span>Wins: {{ participant.wins }}</span>
+
+                <form method="POST"
+                      action="{% url 'tracker.increment' participant.id 'wins' %}">
+                    {% csrf_token %}
+                    <button type="submit">+</button>
+                </form>
+                <form method="POST"
+                      action="{% url 'tracker.decrement' participant.id 'wins' %}">
+                    {% csrf_token %}
+                    <button type="submit">-</button>
+                </form>
+            </div>
+
+            <div class="stat">
+                <span>Tickets: {{ participant.tickets }}</span>
+
+                <form method="POST"
+                      action="{% url 'tracker.increment' participant.id 'tickets' %}">
+                    {% csrf_token %}
+                    <button type="submit">+</button>
+                </form>
+    
+                <form method="POST"
+                      action="{% url 'tracker.decrement' participant.id 'tickets' %}">
+                    {% csrf_token %}
+                    <button type="submit">-</button>
+                </form>
+            </div>
+
+            <div class="stat">
+                <span class="blur-censor">Bruh</span>: {{ participant.pisses }}
+
+                <form method="POST"
+                      action="{% url 'tracker.increment' participant.id 'pisses' %}">
+                    {% csrf_token %}
+                    <button type="submit">+</button>
+                </form>
+                <form method="POST"
+                      action="{% url 'tracker.decrement' participant.id 'pisses' %}">
+                    {% csrf_token %}
+                    <button type="submit">-</button>
+                </form>
+            </div>
+
+            <div class="remove">
+                <form method="POST"
+                      action="{% url 'tracker.remove' participant.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Remove</button>
+                </form>
+            </div>
+    
+        </div>
+    
+    {% empty %}
+
+        <p>No participants yet . . .</p>
+
+    {% endfor %}
+    <div class="remove-all">
+                <form method="POST"
+                      action="{% url 'tracker.removeAll' %}">
+                    {% csrf_token %}
+                    <button type="submit">Remove All</button>
+                </form>
+            </div>
+ 
+<div class="p-3">
+    <div class="container">
+        <div class="row mt-3">
+            <div class="col mx-auto text-center mb-3">
+                <h3>Current Leaders</h3>
+
+                <p id="winner">Loading...</p>
+                <p id="ticketer">Loading...</p>
+                <p id="pisser">Loading...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    fetch("{% url 'tracker.currentWinner' %}")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('winner').textContent =
+                `Most Wins: ${data.name} with ${data.wins} wins.`;
+        });
+
+    fetch("{% url 'tracker.currentTicketer' %}")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('ticketer').textContent =
+                `Most Tickets: ${data.name} with ${data.tickets} tickets.`;
+        });
+
+    fetch("{% url 'tracker.currentPisser' %}")
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('pisser').textContent =
+                `Most: ${data.name} with ${data.pisses}.`;
+        });
+</script>
+
+
+
+{% endblock content %}
